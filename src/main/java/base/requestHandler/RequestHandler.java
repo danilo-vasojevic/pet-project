@@ -45,7 +45,7 @@ public class RequestHandler {
     }
 
     public ResponseStatus getResponseStatus() {
-        String responseBodyString = lastResponse.body().print();
+        String responseBodyString = lastResponse.body().asString();
         if(isValidJSON(responseBodyString)) {
             JSONObject responseBodyJSON = new JSONObject(responseBodyString);
             return ResponseStatus.tryGetValue(responseBodyJSON.getString(STATUS));
