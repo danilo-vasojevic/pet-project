@@ -3,6 +3,8 @@ package base.requestHandler;
 import base.data.ResponseStatus;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -29,6 +31,7 @@ public class RequestHandler {
     public void postWithJSONasBody(JSONObject jsonObj) {
         lastResponse =
                 given().
+                        accept(ContentType.JSON.toString()).
                         contentType(ContentType.JSON.toString()).
                         body(jsonObj.toString()).
                 when().
@@ -42,14 +45,31 @@ public class RequestHandler {
     }
 
     public ResponseStatus getResponseStatus() {
-        JSONObject responseBodyJSON = new JSONObject(lastResponse.body().print());
-        return ResponseStatus.tryGetValue(responseBodyJSON.getString(STATUS));
+        String responseBodyString = lastResponse.body().print();
+        if(isValidJSON(responseBodyString)) {
+            JSONObject responseBodyJSON = new JSONObject(responseBodyString);
+            return ResponseStatus.tryGetValue(responseBodyJSON.getString(STATUS));
+        }
+        else return ResponseStatus.UNKNOWN;
     }
 
     private String getRequestURL() {
         return "".equals(port)
                 ? format("http://%s/%s", host, queryString)
                 : format("http://%s:%s/%s", host, port, queryString);
+    }
+
+    private boolean isValidJSON(String s) {
+        try {
+            new JSONObject(s);
+        } catch (JSONException ex) {
+            try {
+                new JSONArray(s);
+            } catch (JSONException ex1) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }

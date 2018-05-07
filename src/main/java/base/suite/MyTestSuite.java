@@ -11,30 +11,35 @@ import org.springframework.stereotype.Component;
 public class MyTestSuite implements RunnableTestSuite {
 
     @Autowired
-    public TestCaseProvider testCaseProvider;
+    private TestCaseProvider testCaseProvider;
 
     @Autowired
-    public OutputGenerator outputGenerator;
+    private OutputGenerator outputGenerator;
 
     @Autowired
-    public RequestHandler requestHandler;
+    private RequestHandler requestHandler;
+
+    private int statusCode;
+    private String responseStatus;
 
     @Override
     public void run() {
-        testCaseProvider
-                .prepareTestCases()
-                .getTestCases()
-                .forEach(this::executeTestCase);
+           testCaseProvider
+                   .prepareTestCases()
+                   .getTestCases()
+                   .forEach(this::executeTestCase);
     }
 
     private void executeTestCase(PetProjectTestData petProjectTestData) {
-        requestHandler.postWithJSONasBody(petProjectTestData.jsonObject);
-
-        int httpStatusCode = requestHandler.getHTTPStatusCode();
-        String responseStatus = requestHandler.getResponseStatus().getStatusString();
         String testCaseFilePath = petProjectTestData.filePath.toAbsolutePath().toString();
-
-        outputGenerator.writeToOutputFile(testCaseFilePath, httpStatusCode, responseStatus);
-
+        try {
+            requestHandler.postWithJSONasBody(petProjectTestData.jsonObject);
+            statusCode = requestHandler.getHTTPStatusCode();
+            responseStatus = requestHandler.getResponseStatus().toString();
+        } catch (Throwable e) {
+            e.printStackTrace();
+        } finally {
+            outputGenerator.writeToOutputFile(testCaseFilePath, statusCode, responseStatus);
+        }
     }
 }

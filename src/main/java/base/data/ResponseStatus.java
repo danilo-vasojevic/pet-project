@@ -12,7 +12,8 @@ public enum ResponseStatus {
         this.status = status;
     }
 
-    public String getStatusString() {return status;}
+    @Override
+    public String toString() {return status;}
 
     public static ResponseStatus tryGetValue(String name) {
         try {
